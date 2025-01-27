@@ -3,10 +3,22 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import linregress
 
 def process_language_files(language, language_folder, md_folder):
+    """
+    Processes .csv files stored in the specified paths into matrices.
+
+    Inputs:
+        - language (str), name of the language for which files are to be processed
+        - language_folder (str), path to the file containing .csv files with data concerning the Language network
+        - md_folder (str), path to the file containing .csv files with data concerning the MD network
+
+    Outputs:
+        - language_matrix (np array, 12x142 or 12x150), matrix containing the numerical data for the Language network
+        - md_matrix (np array, 18x142 or 18x150), matrix containing the numerical data for the MD network
+
+    """
 
     # Initialize variables for language and md data
     language_data = []
@@ -41,12 +53,32 @@ def process_language_files(language, language_folder, md_folder):
 
 # Function for performing the Fisher Transform on the data
 def fisher_transform(correlation_matrix):
+    """
+    Performs Fisher transform on the input matrix
+
+    Input:
+        - correlation matrix (np array, 30x30), matrix containing pairwise Pearson's correlations for each of the ROIs
+
+    Output:
+        - np.arctanh(clipped matrix) (np array, 30x30), input matrix transformed with Fisher transform
+    """
     # Clip values to avoid division by zero in arctanh
     clipped_matrix = np.clip(correlation_matrix, -0.9999, 0.9999)
     return np.arctanh(clipped_matrix)
 
 # Function for calculating region averages for a matrix
 def calculate_region_averages(matrix):
+    """
+    Takes the input matrix and calculates averages values for predetermined subregions, while ignoring the diagonal.
+
+    Inputs:
+        - matrix (numpy array, 30x30)
+
+    Output:
+        - Language_avg, (float), average value for the region coresponding to the language network
+        - MD_avg (float), average value for the region coresponding to the MD network
+        - Language_MD_avg (float), average value for the region coresponding to the inter-network correlation regions
+    """
 
     # Create a mask to exclude the main diagonal
     mask = np.eye(matrix.shape[0], dtype=bool)
@@ -88,6 +120,15 @@ def calculate_region_averages(matrix):
 
 # Function to calculate boxplot components
 def calculate_boxplot_components(data):
+    """
+    Calculates components for the boxplot from figure 3c
+
+    Input:
+        - data (dict), Dictionary cantaining three vectors with names of the averaged regions 
+                       containing average values for this region for each language
+    Output:
+        - components (dict), Dictionary of vectors containing boxplot components for the key categories in the original dictionary
+    """
     components = {}
     for category, values in data.items():
         values = np.array(values)
@@ -113,8 +154,20 @@ def calculate_boxplot_components(data):
     return components
 
 # Function for plotting a boxplot based on calculated parameters
-def plot_custom_boxplot(components, category_labels, fisher, paradigm):
+def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, output_folder):
+    """
+    Plots the boxplot from figure 3c.
 
+    Inputs:
+        - components (dict), Dictionary of vectors containing boxplot components for the key categories in the original dictionary
+        - category_labels (list), List of category labels for naming the ticks on the x-axis
+        - data (dict), Dictionary cantaining three vectors with names of the averaged regions 
+                       containing average values for this region for each language
+        - fisher (bool), logical value used to determine if Fisher transform is to be performed. Here used for determining the plot title.
+        - paradigm (str), string determining paradigm explored. Here used for determining the plot title.
+    Output:
+        
+    """
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Extract boxplot components in order
@@ -160,5 +213,9 @@ def plot_custom_boxplot(components, category_labels, fisher, paradigm):
     ax.set_xticklabels(category_labels)
     ax.set_ylabel('Average correlation')
     ax.axhline(y=0, color='gray', linestyle='--', lw=1)  # Add horizontal line at y=0
+
+    # Save the figure
+    output_path = os.path.join(output_folder, r"boxplot.png")
+    plt.savefig(output_path)
 
     plt.show()

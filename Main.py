@@ -14,20 +14,20 @@ paradigm = "story"    # option to choose the paradigm. "story" for Story Compreh
 
 # Story Comprehension
 if (paradigm == "story"):
-    language_data_path = r"C:\Users\samue\Desktop\Python_BarIlan\Python_Final_Project\Data\Alice_TimeSeriesData_Language_StoryComprehension"
-    md_data_path = r"C:\Users\samue\Desktop\Python_BarIlan\Python_Final_Project\Data\Alice_TimeSeriesData_MD_StoryComprehension"
+    language_data_path = r"Data\Alice_TimeSeriesData_Language_StoryComprehension"
+    md_data_path = r"Data\Alice_TimeSeriesData_MD_StoryComprehension"
 
 #Resting State
 elif (paradigm == "resting"):
-    language_data_path = r"C:\Users\samue\Desktop\Python_BarIlan\Python_Final_Project\Data\Alice_TimeSeriesData_Language_RestingState"
-    md_data_path = r"C:\Users\samue\Desktop\Python_BarIlan\Python_Final_Project\Data\Alice_TimeSeriesData_MD_RestingState"
+    language_data_path = r"Data\Alice_TimeSeriesData_Language_RestingState"
+    md_data_path = r"Data\Alice_TimeSeriesData_MD_RestingState"
 
 assert paradigm == "resting" or paradigm == "story", "Unexpected paradigm selected. Please choose 'story' for story comprehension or 'resting' for Resting State"
 assert os.path.exists(language_data_path) == True, "Path to the Language Data folder does not exist. Please specify correct path."
 assert os.path.exists(md_data_path) == True, "Path to the MD Data folder does not exist. Please specify correct path."
 
 #Output path for saving results
-output_folder = r"C:\Users\samue\Desktop\Python_BarIlan\Python_Final_Project\Matrices\Resting_NoFish"
+output_folder = r"Matrices"
 
 fisher = True # option to choose if the Fisher transform will be applied to the data. If True, then transform is applied
 assert type(fisher) == bool, "'Fisher parameter is not a boolean. Please assign a logical value (1 if You want Fisher transform to be applied)'"
@@ -83,7 +83,7 @@ for target_language in language_list:
         if (fisher == True):
 
             # Apply Fisher transformation
-            fisher_corr_matrix = fisher_transform(full_corr_matrix)
+            fisher_corr_matrix = Functions.fisher_transform(full_corr_matrix)
 
             # Store the currently processed correlation matrix
             all_matrices[target_language] = fisher_corr_matrix
@@ -93,7 +93,7 @@ for target_language in language_list:
             print(f"Matrix type: {type(all_matrices[target_language])}, shape: {all_matrices[target_language].shape}")
 
             # Calculate region averages 
-            averages = calculate_region_averages(fisher_corr_matrix)
+            averages = Functions.calculate_region_averages(fisher_corr_matrix)
 
         else:
 
@@ -102,7 +102,7 @@ for target_language in language_list:
             print(f"Assigning matrix for {target_language}.")
             print(f"Matrix type: {type(all_matrices[target_language])}, shape: {all_matrices[target_language].shape}")
 
-            averages = calculate_region_averages(full_corr_matrix)
+            averages = Functions.calculate_region_averages(full_corr_matrix)
 
         # Save the region averages for currently processed language
         region_averages[target_language] = {
@@ -232,7 +232,7 @@ categories = ["Language_avg", "Lang_MD_avg", "MD_avg"]
 data = {category: [region_averages[lang][category] for lang in region_averages] for category in categories}
 
 # Calculate boxplot components for each category
-boxplot_components = calculate_boxplot_components(data)
+boxplot_components = Functions.calculate_boxplot_components(data)
 
 # Print the results
 for category, stats in boxplot_components.items():
@@ -241,7 +241,8 @@ for category, stats in boxplot_components.items():
         print(f"  {key}: {value}")
     print()
 
-plot_custom_boxplot(boxplot_components, ["Language_avg", "Lang_MD_avg", "MD_avg"])
+# Plot and save boxplot
+Functions.plot_custom_boxplot(boxplot_components, ["Language_avg", "Lang_MD_avg", "MD_avg"], data, fisher, paradigm, output_folder)
 
 # Convert region_averages to a DataFrame
 results_df = pd.DataFrame.from_dict(region_averages, orient='index').reset_index()
@@ -278,7 +279,13 @@ plt.ylabel("Dissociation (Inter-Network Correlation)")
 plt.legend()
 plt.grid(alpha=0.3)
 plt.tight_layout()
+
+# Save the figure
+output_path = os.path.join(output_folder, r"Fig11.png")
+plt.savefig(output_path)
+
 plt.show()
+
 
 # Print statistical analysis
 print(f"Pearson's r: {r_value:.2f}, p-value: {p_value:.4f}")
