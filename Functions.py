@@ -219,3 +219,65 @@ def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, out
     plt.savefig(output_path)
 
     plt.show()
+
+def visualize_and_save_matrix (matrix, target_language, fisher, paradigm, output_folder):
+    # Visualize the combined matrix
+    plt.figure(figsize=(12, 12))
+    
+    plt.imshow(
+        matrix,
+        cmap=plt.get_cmap('Spectral').reversed(),
+        aspect='equal'
+        )
+    
+    if (target_language == "average"):
+        if (fisher == True):
+            if (paradigm == "story"):
+                plt.title(y=1.1, label="Average Correlation Matrix (Story Comprehension, Fisher Transform)", size='xx-large')
+                file_name = "Avg_Cor_Story_Fisher.png"
+            else:
+                plt.title(y=1.1, label="Average Correlation Matrix (Resting State, Fisher Transform)", size='xx-large')
+                file_name = "Avg_Cor_Rest_Fisher.png"
+        elif (paradigm == "story"):
+            plt.title(y=1.1, label="Average Correlation Matrix (Story Comprehension, No Fisher Transform)", size='xx-large')
+            file_name = "Avg_Cor_Story_NoFisher.png"
+        else:
+            plt.title(y=1.1, label="Average Correlation Matrix (Resting State, No Fisher Transform)", size='xx-large')
+            file_name = "Avg_Cor_Rest_NoFisher.png"
+    else:
+        plt.title(y=1.1, label=target_language, size='xx-large')
+
+    # Set lines separating regions and hemispheres for better visibility
+    plt.axhline(y=5.5, color='black', linewidth=1.5)
+    plt.axhline(y=11.5, color='black', linewidth=2.0)
+    plt.axhline(y=20.5, color='black', linewidth=1.5)
+
+    plt.axvline(x=5.5, color='black', linewidth=1.5)
+    plt.axvline(x=11.5, color='black', linewidth=2.0)
+    plt.axvline(x=20.5, color='black', linewidth=1.5)
+
+    # Add section labels for Language and MD (LH and RH)
+    plt.text(-0.5, 3, "Language LH", va='center', ha='right', fontsize=12, rotation=90, color='black')
+    plt.text(-0.5, 8.5, "Language RH", va='center', ha='right', fontsize=12, rotation=90, color='black')
+    plt.text(-0.5, 14.5, "MD LH", va='center', ha='right', fontsize=12, rotation=90, color='black')
+    plt.text(-0.5, 25, "MD RH", va='center', ha='right', fontsize=12, rotation=90, color='black')
+
+    plt.text(3, -1.0, "Language LH", va='center', ha='center', fontsize=12, color='black')
+    plt.text(8.5, -1.0, "Language RH", va='center', ha='center', fontsize=12, color='black')
+    plt.text(14.5, -1.0, "MD LH", va='center', ha='center', fontsize=12, color='black')
+    plt.text(25, -1.0, "MD RH", va='center', ha='center', fontsize=12, color='black')
+
+    plt.xticks([])
+    plt.yticks([])
+    plt.tight_layout()
+
+    
+    # Save the figure
+    if (target_language == "average"):
+        output_path = os.path.join(output_folder, f"{file_name}")
+    else:
+        output_path = os.path.join(output_folder, f"{target_language}.png")
+    plt.savefig(output_path)
+    plt.close()
+
+    print(f"Saved correlation matrix for {target_language} to {output_path}")
