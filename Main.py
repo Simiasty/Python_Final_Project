@@ -8,23 +8,29 @@ from scipy.stats import linregress
 from Functions import process_language_files
 import Functions
 
+# Define parameters
+fisher = True  # option to choose if the Fisher transform will be applied to the data
 # Define data to work on
-
 paradigm = "story"    # option to choose the paradigm. "story" for Story Comprehension and "resting" for Resting State
 
 # Story Comprehension
 if (paradigm == "story"):
-    language_data_path = r"Data\Alice_TimeSeriesData_Language_StoryComprehension"
-    md_data_path = r"Data\Alice_TimeSeriesData_MD_StoryComprehension"
+    language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_StoryComprehension")
+    md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_StoryComprehension")
 
 #Resting State
 elif (paradigm == "resting"):
-    language_data_path = r"Data\Alice_TimeSeriesData_Language_RestingState"
-    md_data_path = r"Data\Alice_TimeSeriesData_MD_RestingState"
+    language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_StoryComprehension")
+    md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_StoryComprehension")
 
-assert paradigm == "resting" or paradigm == "story", "Unexpected paradigm selected. Please choose 'story' for story comprehension or 'resting' for Resting State"
-assert os.path.exists(language_data_path) == True, "Path to the Language Data folder does not exist. Please specify correct path."
-assert os.path.exists(md_data_path) == True, "Path to the MD Data folder does not exist. Please specify correct path."
+# Check paradigm value
+if paradigm not in ["resting", "story"]:
+    raise ValueError("Unexpected paradigm selected. Please choose 'story' for story comprehension or 'resting' for Resting State.")
+# Check if paths exist
+if not os.path.exists(language_data_path):
+    raise FileNotFoundError(f"Path to the Language Data folder does not exist: {language_data_path}")
+if not os.path.exists(md_data_path):
+    raise FileNotFoundError(f"Path to the MD Data folder does not exist: {md_data_path}")
 
 #Output path for saving results
 output_folder = r"Matrices"
@@ -33,7 +39,11 @@ fisher = False # option to choose if the Fisher transform will be applied to the
 assert type(fisher) == bool, "'Fisher parameter is not a boolean. Please assign a logical value (1 if You want Fisher transform to be applied)'"
 
 # Ensure the output folder exists, create it if not
-os.makedirs(output_folder, exist_ok=True)
+try:
+    os.makedirs(output_folder, exist_ok=True)
+except Exception as e:
+    raise OSError(f"Failed to create output directory {output_folder}: {e}")
+
 
 # Create a list of languages to be processed
 language_list = [
@@ -62,6 +72,10 @@ for target_language in language_list:
             language_folder=language_data_path,
             md_folder=md_data_path
         )
+
+         #Check if data was successfully processed
+        if language_data is None or md_data is None:
+            raise ValueError(f"Failed to process data for {target_language}. Skipping.")
 
         # Debugging, checking shape of the resultant data
         print(f"Language data shape: {language_data.shape}")
@@ -99,10 +113,16 @@ for target_language in language_list:
 
             all_matrices[target_language] = full_corr_matrix
 
+             # Debugging. Verify type and shape of the currently processed matrix after saving
             print(f"Assigning matrix for {target_language}.")
             print(f"Matrix type: {type(all_matrices[target_language])}, shape: {all_matrices[target_language].shape}")
 
+            # Calculate region averages 
             averages = Functions.calculate_region_averages(full_corr_matrix)
+
+        #Check if averages were successfully calculated
+        if averages is None:
+            raise ValueError(f"Failed to calculate averages for {target_language}. Skipping.")
 
         # Save the region averages for currently processed language
         region_averages[target_language] = {

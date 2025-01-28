@@ -24,30 +24,51 @@ def process_language_files(language, language_folder, md_folder):
     language_data = []
     md_data = []
 
+    # Check if the folders exist
+    if not os.path.exists(language_folder):
+        raise FileNotFoundError(f"Language folder not found: {language_folder}")
+    if not os.path.exists(md_folder):
+        raise FileNotFoundError(f"MD folder not found: {md_folder}")
+
     # Process files in the Language folder
     for file in os.listdir(language_folder):
         if file.endswith('.csv') and language in file:  # Match the language
 
             file_path = os.path.join(language_folder, file) # Read the path of an individual file
-            df = pd.read_csv(file_path)  # Load CSV file
-            df = df.fillna(0)   # Fill missing values with 0s
+            try:  
+                df = pd.read_csv(file_path)  # Load CSV file
+                df = df.fillna(0)   # Fill missing values with 0s
 
-            # Extract only ROI activation columns (starting from 5th column)
-            language_data.append(df.iloc[:, 4:].values)
+                # Extract only ROI activation columns (starting from 5th column)
+                language_data.append(df.iloc[:, 4:].values)
+            except Exception as e:
+                print(f"Error reading file {file_path}: {e}")
+
+    if not language_data: # Check if data was loaded
+        raise ValueError(f"No valid language files found for {language} in {language_folder}")
 
     # Process files in the MD folder (same as Language)
     for file in os.listdir(md_folder):
         if file.endswith('.csv') and language in file:
 
             file_path = os.path.join(md_folder, file)
-            df = pd.read_csv(file_path)
-            df = df.fillna(0)
+            try:  # Add error handling for file reading**
+                df = pd.read_csv(file_path)
+                df = df.fillna(0)
 
-            md_data.append(df.iloc[:, 4:].values)
+                md_data.append(df.iloc[:, 4:].values)
+            except Exception as e:
+                print(f"Error reading file {file_path}: {e}")
+
+    if not md_data:  # Check if data was loaded**
+        raise ValueError(f"No valid MD files found for {language} in {md_folder}")
 
     # Average across participants for both systems
-    language_matrix = np.mean(np.stack(language_data, axis=0), axis=0)  # Average for Language system
-    md_matrix = np.mean(np.stack(md_data, axis=0), axis=0)  # Average for MD system
+    try: # Handle potential shape or data issues
+        language_matrix = np.mean(np.stack(language_data, axis=0), axis=0)  # Average for Language system
+        md_matrix = np.mean(np.stack(md_data, axis=0), axis=0)  # Average for MD system
+    except Exception as e:
+        raise ValueError(f"Error averaging data: {e}")
 
     return language_matrix, md_matrix
 
