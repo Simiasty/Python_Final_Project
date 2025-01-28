@@ -242,6 +242,18 @@ def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, out
     plt.show()
 
 def visualize_and_save_matrix (matrix, target_language, fisher, paradigm, output_folder):
+    """
+    Plots the input matrix using matplotlib and saves the result as a .png image.
+
+    Inputs:
+        - target_language (str), string containing the name of the language for which the matrix was calculated.
+                                 The value can be set to 'average' to indicate processing of the matrix containing average corralations
+                                 for all languages.
+        - fisher (bool), logical value used to determine if Fisher transform is to be performed. Here used for determining plot and file titles.
+        - paradigm (str), string determining paradigm explored. Here used for determining the plot and file titles.
+        - output_folder (str), string containing the path to the output directory
+        
+    """
     # Visualize the combined matrix
     plt.figure(figsize=(12, 12))
     
