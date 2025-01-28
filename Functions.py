@@ -11,8 +11,8 @@ def process_language_files(language, language_folder, md_folder):
 
     Inputs:
         - language (str), name of the language for which files are to be processed
-        - language_folder (str), path to the file containing .csv files with data concerning the Language network
-        - md_folder (str), path to the file containing .csv files with data concerning the MD network
+        - language_folder (str), path to the directory containing .csv files with data concerning the Language network
+        - md_folder (str), path to the directory containing .csv files with data concerning the MD network
 
     Outputs:
         - language_matrix (np array, 12x142 or 12x150), matrix containing the numerical data for the Language network

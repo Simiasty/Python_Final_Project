@@ -3,13 +3,15 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import linregress
-from Functions import process_language_files
 import Functions
 
 # Define parameters
 fisher = True  # option to choose if the Fisher transform will be applied to the data
+
+# Check datatype for 'fisher' variable
+assert type(fisher) == bool, "'Fisher parameter is not a boolean. Please assign a logical value (1 if You want Fisher transform to be applied)'"
+
 # Define data to work on
 paradigm = "story"    # option to choose the paradigm. "story" for Story Comprehension and "resting" for Resting State
 
@@ -33,10 +35,7 @@ if not os.path.exists(md_data_path):
     raise FileNotFoundError(f"Path to the MD Data folder does not exist: {md_data_path}")
 
 #Output path for saving results
-output_folder = r"Matrices"
-
-fisher = False # option to choose if the Fisher transform will be applied to the data. If True, then transform is applied
-assert type(fisher) == bool, "'Fisher parameter is not a boolean. Please assign a logical value (1 if You want Fisher transform to be applied)'"
+output_folder = r"Figures"
 
 # Ensure the output folder exists, create it if not
 try:
@@ -85,7 +84,7 @@ for target_language in language_list:
         combined_matrix = np.vstack([language_data, md_data])
 
         # Debugging, shape of the combined matrix
-        print(f"MD data shape: {md_data.shape}")
+        print(f"Combined matrix shape: {combined_matrix.shape}")
 
         # Compute the full 30x30 correlation matrix
         full_corr_matrix = np.corrcoef(combined_matrix)
@@ -102,20 +101,12 @@ for target_language in language_list:
             # Store the currently processed correlation matrix
             all_matrices[target_language] = fisher_corr_matrix
 
-            # Debugging. Verify type and shape of the currently processed matrix after saving
-            print(f"Assigning matrix for {target_language}.")
-            print(f"Matrix type: {type(all_matrices[target_language])}, shape: {all_matrices[target_language].shape}")
-
-            # Calculate region averages 
+            # Calculate region averages
             averages = Functions.calculate_region_averages(fisher_corr_matrix)
 
         else:
 
             all_matrices[target_language] = full_corr_matrix
-
-             # Debugging. Verify type and shape of the currently processed matrix after saving
-            print(f"Assigning matrix for {target_language}.")
-            print(f"Matrix type: {type(all_matrices[target_language])}, shape: {all_matrices[target_language].shape}")
 
             # Calculate region averages 
             averages = Functions.calculate_region_averages(full_corr_matrix)

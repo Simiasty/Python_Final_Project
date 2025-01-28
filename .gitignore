@@ -1,1 +1,4 @@
 venv
+my_project.egg-info
+_pycache_
+.mypy_cache
