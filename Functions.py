@@ -10,61 +10,58 @@ def process_language_files(language, language_folder, md_folder):
     Processes .csv files stored in the specified paths into matrices.
 
     Inputs:
-        - language (str), name of the language for which files are to be processed
-        - language_folder (str), path to the directory containing .csv files with data concerning the Language network
-        - md_folder (str), path to the directory containing .csv files with data concerning the MD network
+        - language (str): Name of the language for which files are to be processed.
+        - language_folder (str): Path to the directory containing .csv files for the Language network.
+        - md_folder (str): Path to the directory containing .csv files for the MD network.
 
     Outputs:
-        - language_matrix (np array, 12x142 or 12x150), matrix containing the numerical data for the Language network
-        - md_matrix (np array, 18x142 or 18x150), matrix containing the numerical data for the MD network
-
+        - language_matrix (np.ndarray): Matrix containing the numerical data for the Language network.
+        - md_matrix (np.ndarray): Matrix containing the numerical data for the MD network.
     """
 
-    # Initialize variables for language and md data
-    language_data = []
-    md_data = []
+    def process_files_in_folder(folder, language):
+        """
+        Helper function to process files in a given folder.
 
-    # Check if the folders exist
-    if not os.path.exists(language_folder):
-        raise FileNotFoundError(f"Language folder not found: {language_folder}")
-    if not os.path.exists(md_folder):
-        raise FileNotFoundError(f"MD folder not found: {md_folder}")
+        Inputs:
+            - folder (str): Path to the directory containing .csv files.
+            - language (str): Name of the language to filter files.
 
-    # Process files in the Language folder
-    for file in os.listdir(language_folder):
-        if file.endswith('.csv') and language in file:  # Match the language
+        Outputs:
+            - data (list): List of NumPy arrays with extracted data from all matching files.
+        """
+        data = []
 
-            file_path = os.path.join(language_folder, file) # Read the path of an individual file
-            try:  
-                df = pd.read_csv(file_path)  # Load CSV file
-                df = df.fillna(0)   # Fill missing values with 0s
+        # Check if the folder exists
+        if not os.path.exists(folder):
+            raise FileNotFoundError(f"Folder not found: {folder}")
 
-                # Extract only ROI activation columns (starting from 5th column)
-                language_data.append(df.iloc[:, 4:].values)
-            except Exception as e:
-                print(f"Error reading file {file_path}: {e}")
+        # Process files in the folder
+        for file in os.listdir(folder):
+            if file.endswith('.csv') and language in file:  # Match the language
+                file_path = os.path.join(folder, file)  # Full file path
+                try:
+                    # Load and process the CSV file
+                    df = pd.read_csv(file_path)
+                    df = df.fillna(0)  # Fill missing values with 0s
+                    data.append(df.iloc[:, 4:].values)  # Extract ROI activation columns
+                except Exception as e:
+                    print(f"Error reading file {file_path}: {e}")
 
-    if not language_data: # Check if data was loaded
+        return data
+
+    # Process Language and MD folders using the helper function
+    language_data = process_files_in_folder(language_folder, language)
+    md_data = process_files_in_folder(md_folder, language)
+
+    # Check if valid data was loaded
+    if not language_data:
         raise ValueError(f"No valid language files found for {language} in {language_folder}")
-
-    # Process files in the MD folder (same as Language)
-    for file in os.listdir(md_folder):
-        if file.endswith('.csv') and language in file:
-
-            file_path = os.path.join(md_folder, file)
-            try:  # Add error handling for file reading**
-                df = pd.read_csv(file_path)
-                df = df.fillna(0)
-
-                md_data.append(df.iloc[:, 4:].values)
-            except Exception as e:
-                print(f"Error reading file {file_path}: {e}")
-
-    if not md_data:  # Check if data was loaded**
+    if not md_data:
         raise ValueError(f"No valid MD files found for {language} in {md_folder}")
 
     # Average across participants for both systems
-    try: # Handle potential shape or data issues
+    try:
         language_matrix = np.mean(np.stack(language_data, axis=0), axis=0)  # Average for Language system
         md_matrix = np.mean(np.stack(md_data, axis=0), axis=0)  # Average for MD system
     except Exception as e:
@@ -189,6 +186,20 @@ def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, out
     Output:
         
     """
+
+    # Validate components - Added for debugging
+    if not isinstance(components, dict):
+        raise TypeError(f"Input 'components' must be a dictionary. Got: {type(components)}")
+    for key in category_labels:
+        if key not in components:
+            raise KeyError(f"Key '{key}' not found in 'components'. Expected keys: {category_labels}") 
+
+    # Validate output folder - Added for debugging
+    if not os.path.isdir(output_folder):
+        raise FileNotFoundError(f"Output folder does not exist: {output_folder}")
+
+    print(f"Plotting boxplot for categories: {category_labels}")
+
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Extract boxplot components in order
@@ -254,6 +265,17 @@ def visualize_and_save_matrix (matrix, target_language, fisher, paradigm, output
         - output_folder (str), string containing the path to the output directory
         
     """
+
+    # Validate matrix - Added for debugging
+    if not isinstance(matrix, np.ndarray):
+        raise TypeError(f"Input 'matrix' must be a NumPy array. Got: {type(matrix)}")  
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError(f"Input 'matrix' must be square. Got shape: {matrix.shape}")  
+
+    # Validate output folder - Added for debugging
+    if not os.path.isdir(output_folder):
+        raise FileNotFoundError(f"Output folder does not exist: {output_folder}") 
+
     # Visualize the combined matrix
     plt.figure(figsize=(12, 12))
     
