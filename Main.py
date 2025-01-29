@@ -6,6 +6,9 @@ import pandas as pd
 from scipy.stats import linregress
 import Functions
 
+"""
+Create Correlation Matrices
+"""
 # Define parameters
 fisher = True  # option to choose if the Fisher transform will be applied to the data
 
@@ -143,6 +146,10 @@ print(f"Averaged matrix shape: {average_matrix.shape}")
 # Plot the Averaged Matrix and save it
 Functions.visualize_and_save_matrix(average_matrix, "average", fisher, paradigm, output_folder)
 
+"""
+Create the Average Correlation Boxplots
+"""
+
 # Define the keys for the categories
 categories = ["Language_avg", "Lang_MD_avg", "MD_avg"]
 
@@ -161,6 +168,10 @@ for category, stats in boxplot_components.items():
 
 # Plot and save boxplot
 Functions.plot_custom_boxplot(boxplot_components, ["Language_avg", "Lang_MD_avg", "MD_avg"], data, fisher, paradigm, output_folder)
+
+"""
+Create Integration vs Dissociation plot
+"""
 
 # Convert region_averages to a DataFrame
 results_df = pd.DataFrame.from_dict(region_averages, orient='index').reset_index()
@@ -203,7 +214,6 @@ output_path = os.path.join(output_folder, r"Fig11.png")
 plt.savefig(output_path)
 
 plt.show()
-
 
 # Print statistical analysis
 print(f"Pearson's r: {r_value:.2f}, p-value: {p_value:.4f}")
