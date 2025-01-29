@@ -5,6 +5,37 @@ import numpy as np
 import pandas as pd
 from scipy.stats import linregress
 
+def process_files_in_folder(folder, language):
+    """
+    Helper function to process files in a given folder.
+
+    Inputs:
+        - folder (str): Path to the directory containing .csv files.
+        - language (str): Name of the language to filter files.
+
+    Outputs:
+        - data (list): List of NumPy arrays with extracted data from all matching files.
+    """
+    data = []
+
+    # Check if the folder exists
+    if not os.path.exists(folder):
+        raise FileNotFoundError(f"Folder not found: {folder}")
+
+    # Process files in the folder
+    for file in os.listdir(folder):
+        if file.endswith('.csv') and language in file:  # Match the language
+            file_path = os.path.join(folder, file)  # Full file path
+            try:
+                # Load and process the CSV file
+                df = pd.read_csv(file_path)
+                df = df.fillna(0)  # Fill missing values with 0s
+                data.append(df.iloc[:, 4:].values)  # Extract ROI activation columns
+            except Exception as e:
+                print(f"Error reading file {file_path}: {e}")
+
+    return data
+
 def process_language_files(language, language_folder, md_folder):
     """
     Processes .csv files stored in the specified paths into matrices.
@@ -18,37 +49,6 @@ def process_language_files(language, language_folder, md_folder):
         - language_matrix (np.ndarray): Matrix containing the numerical data for the Language network.
         - md_matrix (np.ndarray): Matrix containing the numerical data for the MD network.
     """
-
-    def process_files_in_folder(folder, language):
-        """
-        Helper function to process files in a given folder.
-
-        Inputs:
-            - folder (str): Path to the directory containing .csv files.
-            - language (str): Name of the language to filter files.
-
-        Outputs:
-            - data (list): List of NumPy arrays with extracted data from all matching files.
-        """
-        data = []
-
-        # Check if the folder exists
-        if not os.path.exists(folder):
-            raise FileNotFoundError(f"Folder not found: {folder}")
-
-        # Process files in the folder
-        for file in os.listdir(folder):
-            if file.endswith('.csv') and language in file:  # Match the language
-                file_path = os.path.join(folder, file)  # Full file path
-                try:
-                    # Load and process the CSV file
-                    df = pd.read_csv(file_path)
-                    df = df.fillna(0)  # Fill missing values with 0s
-                    data.append(df.iloc[:, 4:].values)  # Extract ROI activation columns
-                except Exception as e:
-                    print(f"Error reading file {file_path}: {e}")
-
-        return data
 
     # Process Language and MD folders using the helper function
     language_data = process_files_in_folder(language_folder, language)
