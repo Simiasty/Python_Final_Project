@@ -80,6 +80,3 @@ Functions.plot_custom_boxplot(boxplot_components, ["Language_avg", "Lang_MD_avg"
 Create Integration vs Dissociation plot
 """
 Functions.plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_folder)
-
-# Print statistical analysis
-# print(f"Pearson's r: {r_value:.2f}, p-value: {p_value:.4f}")
