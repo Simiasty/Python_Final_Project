@@ -4,6 +4,52 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.stats import linregress
+import configparser
+
+def create_config():
+    config = configparser.ConfigParser()
+
+    # Add sections and key-value pairs
+    config['General'] = {'fisher': True, 'paradigm': 'story', 'output_folder' : r"Figures"}
+    config['Languages'] = {
+        'language_list': ", ".join([
+            "Armenian", "Irish", "Greek", "Catalan", "French", "Italian", "Portuguese", "Romanian", "Spanish", "Afrikaans",
+            "Danish", "Dutch", "English", "German", "Norwegian", "Swedish", "Belarusian", "Bulgarian", "Czech", "Latvian",
+            "Lithuanian", "Polish", "Russian", "Serbocroatian", "Slovene", "Ukrainian", "Farsi", "Gujarati", "Hindi",
+            "Marathi", "Nepali", "Arabic", "Hebrew", "Vietnamese", "Tagalog", "Tamil", "Telugu", "Japanese", "Korean", "Swahili",
+            "Mandarin", "Finnish", "Hungarian", "Turkish", "Basque"
+        ])}
+
+    # Write the configuration to a file
+    with open('config.ini', 'w') as configfile:
+        config.write(configfile)
+
+
+if __name__ == "__main__":
+    create_config()
+
+def read_config():
+    # Create a ConfigParser object
+    config = configparser.ConfigParser()
+
+    # Read the configuration file
+    config.read('config.ini')
+
+    # Access values from the configuration file
+    fisher = config.getboolean('General', 'fisher')
+    paradigm = config.get('General', 'paradigm')
+    output_folder = config.get('General', 'output_folder')
+    language_list = config.get('Languages', 'language_list').split(', ')
+
+    # Return a dictionary with the retrieved values
+    config_values = {
+        'fisher': fisher,
+        'paradigm': paradigm,
+        'output_folder': output_folder,
+        'language_list': language_list
+    }
+
+    return config_values
 
 def process_files_in_folder(folder, language):
     """
@@ -225,7 +271,7 @@ def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, out
         # Outliers
         ax.scatter([i] * len(outs), outs, color='black', s=10, zorder=3)
         # Title
-        if (fisher == True):
+        if (fisher):
             if (paradigm == "story"):
                 ax.set_title("Average correlation - Story Comprehension (Fisher transform)")
             else:
@@ -286,7 +332,7 @@ def visualize_and_save_matrix (matrix, target_language, fisher, paradigm, output
         )
     
     if (target_language == "average"):
-        if (fisher == True):
+        if (fisher):
             if (paradigm == "story"):
                 plt.title(y=1.1, label="Average Correlation Matrix (Story Comprehension, Fisher Transform)", size='xx-large')
                 file_name = "Avg_Cor_Story_Fisher.png"
@@ -336,3 +382,161 @@ def visualize_and_save_matrix (matrix, target_language, fisher, paradigm, output
     plt.close()
 
     print(f"Saved correlation matrix for {target_language} to {output_path}")
+
+
+def plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_folder):
+    """
+    Plots the Integration vs Dissociation plot and saves it as a .png file.
+
+    Inputs:
+        - region_averages (dict), dictionary containing average values for each of the three regions for each language
+        - fisher (bool), logical value used to determine if Fisher transform is to be performed. Here used for determining plot and file titles.
+        - paradigm (str), string determining paradigm explored. Here used for determining the plot and file titles.
+        - output_folder (str), string containing the path to the output directory
+        
+    """
+    # Convert region_averages to a DataFrame
+    results_df = pd.DataFrame.from_dict(region_averages, orient='index').reset_index()
+    results_df.columns = ['Language', 'Integration_Language', 'Integration_MD', 'Dissociation']
+
+    # Visualization
+    plt.figure(figsize=(10, 6))
+    plt.scatter(
+        results_df['Integration_Language'], 
+        results_df['Dissociation'], 
+        alpha=0.7, 
+        label='Languages'
+    )
+
+    # Trendline
+    slope, intercept, r_value, p_value, std_err = linregress(results_df['Integration_Language'], results_df['Dissociation'])
+    x_vals = np.linspace(results_df['Integration_Language'].min(), results_df['Integration_Language'].max(), 100)
+    y_vals = slope * x_vals + intercept
+
+    plt.plot(x_vals, y_vals, color='red', linestyle='--', label=f'Trendline (r={r_value:.2f}, p={p_value:.4f})')
+
+    # Plot settings
+    if (fisher):
+        if (paradigm == "story"):
+            plt.title("Integration and Dissociation during Story Comprehension (Fisher Transform)")
+        else:
+            plt.title("Integration and Dissociation during Rest (Fisher Transform)")
+    elif (paradigm == "story"):
+        plt.title("Integration and Dissociation during Story Comprehension (No Fisher Transform)")
+    else:
+        plt.title("Integration and Dissociation during Rest (No Fisher Transform)")
+
+    plt.xlabel("Integration (Intra-Network Correlation)")
+    plt.ylabel("Dissociation (Inter-Network Correlation)")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+
+    # Save the figure
+    output_path = os.path.join(output_folder, r"Fig11.png")
+    plt.savefig(output_path)
+
+    plt.show()
+
+def cycle_through_languages(language_list, language_data_path, md_data_path, region_averages, fisher, paradigm, output_folder):
+    """
+    Goes over each language in the list. Calculates, plots and saves said matrix to a .png file.
+    Calculates regional averages for each languages and populates the region_averages dictionary with them.
+    Calculates, plots and saves the average correlation matrix for all languages.
+
+    Inputs:
+        - language_list (list), list of strings representing names of the languages to be processed
+        - language_data_path (str), path to the directory containing language data
+        - md_data_path (str), path to the directory containing MD data
+        - region_averages (dict), dictionary to be populated with region averages for each language
+        - fisher (bool), logical value used to determine if Fisher transform is to be performed. Here used for determining plot and file titles.
+        - paradigm (str), string determining paradigm explored. Here used for determining the plot and file titles.
+        - output_folder (str), string containing the path to the output directory
+        
+    """
+    # Dictionary to store matrix values for each language
+    all_matrices = {}
+    
+    # Loop through each language
+    for target_language in language_list:
+
+        print(f"Processing language: {target_language}")
+
+        try:
+            # Process the data files for the current language
+            language_data, md_data = process_language_files(
+                language=target_language,
+                language_folder=language_data_path,
+                md_folder=md_data_path
+            )
+
+            #Check if data was successfully processed
+            if language_data is None or md_data is None:
+                raise ValueError(f"Failed to process data for {target_language}. Skipping.")
+
+            # Debugging, checking shape of the resultant data
+            print(f"Language data shape: {language_data.shape}")
+            print(f"MD data shape: {md_data.shape}")
+
+            # Combine Language and MD matrices
+            combined_matrix = np.vstack([language_data, md_data])
+
+            # Debugging, shape of the combined matrix
+            print(f"Combined matrix shape: {combined_matrix.shape}")
+
+            # Compute the full 30x30 correlation matrix
+            full_corr_matrix = np.corrcoef(combined_matrix)
+
+            # Debugging, shape of the full correlation matrix
+            print(f"Full correlation matrix shape: {full_corr_matrix.shape}")
+
+            # Calculate region averages and store them
+            if (fisher):
+
+                # Apply Fisher transformation
+                fisher_corr_matrix = fisher_transform(full_corr_matrix)
+
+                # Store the currently processed correlation matrix
+                all_matrices[target_language] = fisher_corr_matrix
+
+                # Calculate region averages
+                averages = calculate_region_averages(fisher_corr_matrix)
+
+            else:
+
+                all_matrices[target_language] = full_corr_matrix
+
+                # Calculate region averages 
+                averages = calculate_region_averages(full_corr_matrix)
+
+            #Check if averages were successfully calculated
+            if averages is None:
+                raise ValueError(f"Failed to calculate averages for {target_language}. Skipping.")
+
+            # Save the region averages for currently processed language
+            region_averages[target_language] = {
+                "Language_avg": averages[0],
+                "MD_avg": averages[1],
+                "Lang_MD_avg": averages[2],
+            }
+
+            # Visualize and save the combined matrix
+            if (fisher):
+                visualize_and_save_matrix(fisher_corr_matrix, target_language, fisher, paradigm, output_folder)
+            else:
+                visualize_and_save_matrix(full_corr_matrix, target_language, fisher, paradigm, output_folder)
+
+        except Exception as e:
+            print(f"An error occurred while processing {target_language}: {e}")
+
+    # Debugging. Checking shapes and types for correlation matrices for all languages
+    for lang, matrix in all_matrices.items():
+        print(f"Language: {lang}, Matrix shape: {matrix.shape}, Type: {type(matrix)}")
+
+    # Extract all matrices and compute the average
+    matrix_list = list(all_matrices.values())
+    average_matrix = np.mean(matrix_list, axis=0)  # Element-wise average
+    print(f"Averaged matrix shape: {average_matrix.shape}")
+
+    # Plot the Averaged Matrix and save it
+    visualize_and_save_matrix(average_matrix, "average", fisher, paradigm, output_folder)
