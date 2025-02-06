@@ -1,0 +1,12 @@
+Metadata-Version: 2.2
+Name: python_final_project
+Version: 1.0
+Summary: A Python project for analyzing linguistic data.
+Requires-Python: >=3.6
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: matplotlib
+Requires-Dist: pytest
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

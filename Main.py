@@ -1,48 +1,47 @@
 import os
-
-
-import Functions
+from config.config_handler import read_config
+from data_processing.file_processing import cycle_through_languages
+from data_processing.matrix_operations import calculate_region_averages
+from visualization.boxplot import calculate_boxplot_components, plot_custom_boxplot
+from visualization.integration_plot import plot_integration_vs_dissociation
 
 """
 Configuration
 """
 # Load parameters from config file
-config_values = Functions.read_config()
+config_values = read_config()
 
 # Assign parameter values
-fisher = config_values['fisher'] # option to choose if the Fisher transform will be applied to the data
-paradigm = config_values['paradigm'] # option to choose the paradigm. "story" for Story Comprehension and "resting" for Resting State
-output_folder = config_values['output_folder'] # Output path for saving results
-language_list = config_values['language_list'] # List of languages to be processed
+fisher = config_values['fisher']  # Option to choose if the Fisher transform will be applied
+paradigm = config_values['paradigm']  # "story" for Story Comprehension, "resting" for Resting State
+output_folder = config_values['output_folder']  # Output path for saving results
+language_list = config_values['language_list']  # List of languages to be processed
 
-# Check datatype for 'fisher' variable
-assert type(fisher) is bool, "'Fisher parameter is not a boolean. Please assign a logical value (1 if You want Fisher transform to be applied)'"  
+# Validate 'fisher' variable type
+if not isinstance(fisher, bool):
+    raise TypeError("'Fisher' parameter is not a boolean. Please assign True/False.")
 
-# Story Comprehension
-if (paradigm == "story"):
+# Define data paths based on paradigm
+if paradigm == "story":
     language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_StoryComprehension")
     md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_StoryComprehension")
+elif paradigm == "resting":
+    language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_RestingState")
+    md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_RestingState")
+else:
+    raise ValueError("Unexpected paradigm selected. Choose 'story' or 'resting'.")
 
-#Resting State
-elif (paradigm == "resting"):
-    language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_StoryComprehension")
-    md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_StoryComprehension")
-
-# Check paradigm value
-if paradigm not in ["resting", "story"]:
-    raise ValueError("Unexpected paradigm selected. Please choose 'story' for story comprehension or 'resting' for Resting State.")
-# Check if paths exist
+# Check if data paths exist
 if not os.path.exists(language_data_path):
     raise FileNotFoundError(f"Path to the Language Data folder does not exist: {language_data_path}")
 if not os.path.exists(md_data_path):
     raise FileNotFoundError(f"Path to the MD Data folder does not exist: {md_data_path}")
 
-# Ensure the output folder exists, create it if not
+# Ensure the output folder exists
 try:
     os.makedirs(output_folder, exist_ok=True)
 except Exception as e:
     raise OSError(f"Failed to create output directory {output_folder}: {e}")
-
 
 """
 Create Correlation Matrices
@@ -50,33 +49,32 @@ Create Correlation Matrices
 # Prepare a dictionary to store region averages
 region_averages = {}
 
-# Go through all the languages in the list
-Functions.cycle_through_languages(language_list, language_data_path, md_data_path, region_averages, fisher, paradigm, output_folder)
+# Process languages and create correlation matrices
+cycle_through_languages(language_list, language_data_path, md_data_path, region_averages, fisher, paradigm, output_folder)
 
 """
 Create the Average Correlation Boxplots
 """
-
-# Define the keys for the categories
+# Define categories
 categories = ["Language_avg", "Lang_MD_avg", "MD_avg"]
 
 # Extract data for each category
 data = {category: [region_averages[lang][category] for lang in region_averages] for category in categories}
 
-# Calculate boxplot components for each category
-boxplot_components = Functions.calculate_boxplot_components(data)
+# Calculate boxplot components
+boxplot_components = calculate_boxplot_components(data)
 
-# Print the results
+# Print results
 for category, stats in boxplot_components.items():
     print(f"Category: {category}")
     for key, value in stats.items():
         print(f"  {key}: {value}")
     print()
 
-# Plot and save boxplot
-Functions.plot_custom_boxplot(boxplot_components, ["Language_avg", "Lang_MD_avg", "MD_avg"], data, fisher, paradigm, output_folder)
+# Generate and save boxplot
+plot_custom_boxplot(boxplot_components, categories, data, fisher, paradigm, output_folder)
 
 """
-Create Integration vs Dissociation plot
+Create Integration vs Dissociation Plot
 """
-Functions.plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_folder)
+plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_folder)
