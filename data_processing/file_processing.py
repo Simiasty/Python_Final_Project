@@ -1,11 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-import sys
-import os
-
-# Add the project root directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from data_processing.matrix_operations import fisher_transform, calculate_region_averages
 from visualization.matrix_plot import visualize_and_save_matrix
