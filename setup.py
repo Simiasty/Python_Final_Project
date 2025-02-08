@@ -10,6 +10,8 @@ setup(
         "pandas",
         "matplotlib",
         "pytest",
+        "scipy",
+        "configparser"
     ],
     python_requires=">=3.6",                # Specify the Python versions supported
 )

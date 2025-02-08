@@ -2,7 +2,7 @@ import configparser
 
 def create_config():
     config = configparser.ConfigParser()
-    config['General'] = {'fisher': True, 'paradigm': 'story', 'output_folder': "Figures"}
+    config['General'] = {'fisher': False, 'paradigm': 'story', 'output_folder': "Figures"}
     config['Languages'] = {
         'language_list': ", ".join([
             "Armenian", "Irish", "Greek", "Catalan", "French", "Italian", "Portuguese", "Romanian", "Spanish", 
