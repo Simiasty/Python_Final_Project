@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
+from logger import logger
+
 def calculate_boxplot_components(data):
     """
     Calculates components for the boxplot from figure 3c
@@ -53,16 +55,19 @@ def plot_custom_boxplot(components, category_labels, data, fisher, paradigm, out
 
     # Validate components - Added for debugging
     if not isinstance(components, dict):
+        logger.error("Input 'components' must be a dictionary. Got: %s", type(components))
         raise TypeError(f"Input 'components' must be a dictionary. Got: {type(components)}")
     for key in category_labels:
         if key not in components:
+            logger.error("Key '%s' not found in 'components'. Expected keys: %s", key, category_labels)
             raise KeyError(f"Key '{key}' not found in 'components'. Expected keys: {category_labels}") 
 
     # Validate output folder - Added for debugging
     if not os.path.isdir(output_folder):
+        logger.error("Missing folder: Path to the output folder does not exist:  %s", output_folder)
         raise FileNotFoundError(f"Output folder does not exist: {output_folder}")
 
-    print(f"Plotting boxplot for categories: {category_labels}")
+    logger.info("Plotting boxplot for categories: %s", category_labels)
 
     fig, ax = plt.subplots(figsize=(8, 6))
 

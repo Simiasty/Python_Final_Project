@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from logger import logger
 
 def visualize_and_save_matrix(matrix, target_language, fisher, paradigm, output_folder):
     if not os.path.isdir(output_folder):
@@ -15,3 +16,4 @@ def visualize_and_save_matrix(matrix, target_language, fisher, paradigm, output_
     plt.savefig(output_path)
     plt.close()
     print(f"Saved correlation matrix for {target_language} to {output_path}")
+    logger.info("Saved correlation matrix for %s to %s", target_language, output_path)

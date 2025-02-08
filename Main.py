@@ -3,6 +3,7 @@ from config.config_handler import read_config, create_config
 from data_processing.file_processing import cycle_through_languages
 from visualization.boxplot import calculate_boxplot_components, plot_custom_boxplot
 from visualization.integration_plot import plot_integration_vs_dissociation
+from logger import logger
 
 """
 Configuration
@@ -10,7 +11,7 @@ Configuration
 # Making sure config file exists
 config_file_path = "config.ini"
 if not os.path.exists(config_file_path):
-    print("Configuration file not found. Creating a default config file...")
+    logger.info("Configuration file not found. Creating a default config file...")
     create_config()
 
 # Load parameters from config file
@@ -24,6 +25,7 @@ language_list = config_values['language_list']  # List of languages to be proces
 
 # Validate 'fisher' variable type
 if not isinstance(fisher, bool):
+    logger.error("Invalid type for 'fisher': Expected bool, got %s", type(fisher))
     raise TypeError("'Fisher' parameter is not a boolean. Please assign True/False.")
 
 # Define data paths based on paradigm
@@ -34,18 +36,22 @@ elif paradigm == "resting":
     language_data_path = os.path.join("Data", "Alice_TimeSeriesData_Language_RestingState")
     md_data_path = os.path.join("Data", "Alice_TimeSeriesData_MD_RestingState")
 else:
+    logger.error("Invalid value for 'paradigm': Expected 'story' or 'resting', got %s", paradigm)
     raise ValueError("Unexpected paradigm selected. Choose 'story' or 'resting'.")
 
 # Check if data paths exist
 if not os.path.exists(language_data_path):
+    logger.error("Missing data folder: Path to the Language Data folder does not exist:  %s", language_data_path)
     raise FileNotFoundError(f"Path to the Language Data folder does not exist: {language_data_path}")
 if not os.path.exists(md_data_path):
+    logger.error("Missing data folder: Path to the MD Data folder does not exist: %s", language_data_path)
     raise FileNotFoundError(f"Path to the MD Data folder does not exist: {md_data_path}")
 
 # Ensure the output folder exists
 try:
     os.makedirs(output_folder, exist_ok=True)
 except Exception as e:
+    logger.error("Failed folder creation: Unable to create this output directory:  %s", output_folder)
     raise OSError(f"Failed to create output directory {output_folder}: {e}")
 
 """
@@ -71,9 +77,9 @@ boxplot_components = calculate_boxplot_components(data)
 
 # Print results
 for category, stats in boxplot_components.items():
-    print(f"Category: {category}")
+    logger.info("Category: %s", category)
     for key, value in stats.items():
-        print(f"  {key}: {value}")
+        logger.info("  %s: %s", key, value)
     print()
 
 # Generate and save boxplot

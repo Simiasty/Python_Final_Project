@@ -3,6 +3,7 @@ import numpy as np
 import os
 import pandas as pd
 from scipy.stats import linregress
+from logger import logger
 
 def plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_folder):
     """
@@ -15,6 +16,7 @@ def plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_f
         - output_folder (str): Path to the output directory
     """
     if not os.path.isdir(output_folder):
+        logger.error("Missing folder: Path to the output folder does not exist:  %s", output_folder)
         raise FileNotFoundError(f"Output folder does not exist: {output_folder}")
 
     # Convert region_averages to a DataFrame
@@ -59,4 +61,4 @@ def plot_integration_vs_dissociation(region_averages, fisher, paradigm, output_f
     plt.savefig(output_path)
     plt.show()
 
-    print(f"Saved Integration vs. Dissociation plot to {output_path}")
+    logger.info("Saved Integration vs. Dissociation plot to: %s", output_path)
