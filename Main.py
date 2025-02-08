@@ -1,13 +1,18 @@
 import os
-from config.config_handler import read_config
+from config.config_handler import read_config, create_config
 from data_processing.file_processing import cycle_through_languages
-from data_processing.matrix_operations import calculate_region_averages
 from visualization.boxplot import calculate_boxplot_components, plot_custom_boxplot
 from visualization.integration_plot import plot_integration_vs_dissociation
 
 """
 Configuration
 """
+# Making sure config file exists
+config_file_path = "config.ini"
+if not os.path.exists(config_file_path):
+    print("Configuration file not found. Creating a default config file...")
+    create_config()
+
 # Load parameters from config file
 config_values = read_config()
 
@@ -47,7 +52,7 @@ except Exception as e:
 Create Correlation Matrices
 """
 # Prepare a dictionary to store region averages
-region_averages = {}
+region_averages: dict[str, dict[str, float]] = {}
 
 # Process languages and create correlation matrices
 cycle_through_languages(language_list, language_data_path, md_data_path, region_averages, fisher, paradigm, output_folder)
