@@ -42,6 +42,9 @@ We have also added our own element of analysis and visualization in figure 11 (s
 ├── Data/                       # Data directory (should contain CSV files)
 ├── Main.py                     # Main script to run the analysis
 ├── README.md                   # Project documentation
+├── setup.py                    # List of dependendencies
+├── logger.py                   # Logger Configuration
+
 ```
 
 ---
